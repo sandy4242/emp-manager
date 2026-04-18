@@ -372,21 +372,21 @@ export default function DashboardClient({
           <table className="data-table">
             <thead>
               <tr>
-                <th>Emp Code</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Mobile</th>
-                <th>Date of Joining</th>
-                <th>Gender</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
+                <th style={{ width: '12%' }}>Emp Code</th>
+                <th style={{ width: '22%' }}>Name</th>
+                <th style={{ width: '15%' }}>Department</th>
+                <th style={{ width: '12%' }}>Mobile</th>
+                <th style={{ width: '14%' }}>Date of Joining</th>
+                <th style={{ width: '8%' }}>Gender</th>
+                {/* <th>Status</th> */}
+                <th style={{ width: '17%', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredEmployees.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     style={{
                       textAlign: 'center',
                       padding: '48px 16px',
@@ -407,9 +407,9 @@ export default function DashboardClient({
                 filteredEmployees.map((emp) => (
                   <Fragment key={emp.id}>
                     <tr>
-                      <td style={{ fontWeight: 500 }}>{emp.emp_code}</td>
-                      <td>
-                        <div>
+                      <td title={emp.emp_code} style={{ fontWeight: 500 }}>{emp.emp_code}</td>
+                      <td title={`${emp.emp_name} S/o ${emp.emp_father_name}`}>
+                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           <span style={{ fontWeight: 500 }}>{emp.emp_name}</span>
                           <br />
                           <span style={{ fontSize: 12, color: '#9b9b9b' }}>
@@ -417,8 +417,8 @@ export default function DashboardClient({
                           </span>
                         </div>
                       </td>
-                      <td>{emp.department_name}</td>
-                      <td>{emp.mobile_no}</td>
+                      <td title={emp.department_name}>{emp.department_name}</td>
+                      <td title={emp.mobile_no}>{emp.mobile_no}</td>
                       <td>
                         {emp.doj
                           ? new Date(emp.doj).toLocaleDateString('en-IN', {
@@ -429,9 +429,9 @@ export default function DashboardClient({
                           : '-'}
                       </td>
                       <td>{emp.gender === 'M' ? 'Male' : emp.gender === 'F' ? 'Female' : emp.gender}</td>
-                      <td>
+                      {/* <td>
                         <StatusBadge status={emp.status} />
-                      </td>
+                      </td> */}
                       <td>
                         <div
                           style={{
@@ -455,7 +455,7 @@ export default function DashboardClient({
                           </button>
 
                           {/* Approve */}
-                          {emp.status !== 'approved' && (
+                          {/* {emp.status !== 'approved' && (
                             <button
                               className="btn btn-ghost"
                               title="Approve"
@@ -465,10 +465,10 @@ export default function DashboardClient({
                             >
                               <IconCheck size={16} />
                             </button>
-                          )}
+                          )} */}
 
                           {/* Reject */}
-                          {emp.status !== 'rejected' && (
+                          {/* {emp.status !== 'rejected' && (
                             <button
                               className="btn btn-ghost"
                               title="Reject"
@@ -478,7 +478,7 @@ export default function DashboardClient({
                             >
                               <IconXCircle size={16} />
                             </button>
-                          )}
+                          )} */}
 
                           {/* Edit */}
                           <Link
@@ -506,7 +506,7 @@ export default function DashboardClient({
                     {/* Expanded details row */}
                     {expandedRow === emp.id && (
                       <tr key={`${emp.id}-details`}>
-                        <td colSpan={8} style={{ background: '#fafaf8', padding: '20px 24px' }}>
+                        <td colSpan={7} style={{ background: '#fafaf8', padding: '20px 24px' }}>
                           <div
                             className="animate-fade-in"
                             style={{

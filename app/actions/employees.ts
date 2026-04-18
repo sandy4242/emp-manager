@@ -25,8 +25,71 @@ async function getSession() {
   return session;
 }
 
+async function checkUniqueness(
+  aadhaar: string | null,
+  pan: string | null,
+  uan: string | null,
+  adminId: string,
+  excludeId?: string
+): Promise<string | null> {
+  // Check Aadhaar uniqueness
+  if (aadhaar) {
+    const query = supabase
+      .from('employees')
+      .select('id')
+      .eq('admin_id', adminId)
+      .eq('aadhaar_no', aadhaar);
+    if (excludeId) query.neq('id', excludeId);
+    const { data } = await query.limit(1);
+    if (data && data.length > 0) {
+      return 'Employee already exists with that Aadhaar number';
+    }
+  }
+
+  // Check PAN uniqueness
+  if (pan) {
+    const query = supabase
+      .from('employees')
+      .select('id')
+      .eq('admin_id', adminId)
+      .eq('pan_no', pan);
+    if (excludeId) query.neq('id', excludeId);
+    const { data } = await query.limit(1);
+    if (data && data.length > 0) {
+      return 'Employee already exists with that PAN number';
+    }
+  }
+
+  // Check UAN uniqueness (optional field)
+  if (uan) {
+    const query = supabase
+      .from('employees')
+      .select('id')
+      .eq('admin_id', adminId)
+      .eq('uan_no', uan);
+    if (excludeId) query.neq('id', excludeId);
+    const { data } = await query.limit(1);
+    if (data && data.length > 0) {
+      return 'Employee already exists with that UAN number';
+    }
+  }
+
+  return null;
+}
+
 export async function createEmployee(data: Record<string, string | null>) {
   const session = await getSession();
+
+  // Check uniqueness before insert
+  const uniqueError = await checkUniqueness(
+    cleanReq(data.aadhaar_no),
+    cleanReq(data.pan_no),
+    clean(data.uan_no),
+    session.id as string
+  );
+  if (uniqueError) {
+    return { success: false, error: uniqueError };
+  }
 
   const { error } = await supabase.from('employees').insert({
     admin_id: session.id,
@@ -73,6 +136,18 @@ export async function updateEmployee(
   data: Record<string, string | null>
 ) {
   const session = await getSession();
+
+  // Check uniqueness before update (exclude self)
+  const uniqueError = await checkUniqueness(
+    cleanReq(data.aadhaar_no),
+    cleanReq(data.pan_no),
+    clean(data.uan_no),
+    session.id as string,
+    id
+  );
+  if (uniqueError) {
+    return { success: false, error: uniqueError };
+  }
 
   const { error } = await supabase
     .from('employees')

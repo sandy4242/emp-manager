@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import StepIndicator from '../../../components/StepIndicator';
 import SuccessModal from '../../../components/SuccessModal';
@@ -54,8 +54,7 @@ interface FormData {
 
 // Fields that only accept digits and their max lengths
 const NUMERIC_FIELDS: Record<string, number> = {
-  emp_code: 9,
-  esic_no: 17,
+  esic_no: 10,
   uan_no: 12,
   mobile_no: 10,
   aadhaar_no: 12,
@@ -85,7 +84,7 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
     e_code: String(employee.e_code || ''),
     doj: String(employee.doj || ''),
     department_name: String(employee.department_name || ''),
-    pay_day: employee.pay_day ? String(employee.pay_day) : '',
+    // pay_day: employee.pay_day ? String(employee.pay_day) : '',
     esic_no: String(employee.esic_no || ''),
     uan_no: String(employee.uan_no || ''),
     epfo_joining: String(employee.epfo_joining || ''),
@@ -100,6 +99,60 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
     account_no: String(employee.account_no || ''),
     narration: String(employee.narration || ''),
   });
+
+  // ─── Pincode API state ───
+  const [districtOptions, setDistrictOptions] = useState<string[]>([]);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState('');
+
+  // Fetch districts when pincode becomes 6 digits
+  const fetchPincodeData = useCallback(async (pincode: string) => {
+    if (pincode.length !== 6) {
+      setDistrictOptions([]);
+      setPincodeError('');
+      return;
+    }
+    setPincodeLoading(true);
+    setPincodeError('');
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const json = await res.json();
+      if (json[0]?.Status === 'Success' && json[0]?.PostOffice?.length > 0) {
+        const postOffices = json[0].PostOffice;
+        const districts: string[] = [...new Set(postOffices.map((po: any) => (po.District || '').toUpperCase()))] as string[];
+        setDistrictOptions(districts);
+        // Auto-select if only one district
+        if (districts.length === 1) {
+          setFormData((prev) => ({ ...prev, district_name: districts[0] }));
+        } else {
+          // If current district not in options, select first
+          setFormData((prev) => {
+            if (!districts.includes(prev.district_name)) {
+              return { ...prev, district_name: districts[0] };
+            }
+            return prev;
+          });
+        }
+        // Auto-fill state from first post office
+        const state = (postOffices[0].State || '').toUpperCase();
+        if (state) {
+          setFormData((prev) => ({ ...prev, state_name: state }));
+        }
+      } else {
+        setDistrictOptions([]);
+        setPincodeError('Invalid pincode or no data found');
+      }
+    } catch {
+      setPincodeError('Failed to verify pincode');
+      setDistrictOptions([]);
+    } finally {
+      setPincodeLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPincodeData(formData.pin_code);
+  }, [formData.pin_code, fetchPincodeData]);
 
   function handleInputChange(field: string, value: string) {
     // Numeric-only fields: strip non-digits and enforce max length
@@ -207,23 +260,22 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
         break;
       }
       case 1: {
-        if (!formData.emp_code) errors.emp_code = 'Required';
-        else if (formData.emp_code.length !== 9) errors.emp_code = 'Must be exactly 9 digits';
+        if (!formData.emp_code.trim()) errors.emp_code = 'Required';
 
         if (!formData.doj) errors.doj = 'Required';
         if (!formData.department_name.trim()) errors.department_name = 'Required';
 
-        if (formData.esic_no && formData.esic_no.length !== 17) errors.esic_no = 'Must be exactly 17 digits';
+        if (formData.esic_no && formData.esic_no.length !== 10) errors.esic_no = 'Must be exactly 10 digits';
         if (formData.uan_no && formData.uan_no.length !== 12) errors.uan_no = 'Must be exactly 12 digits';
         break;
       }
       case 2: {
         if (!formData.present_address.trim()) errors.present_address = 'Required';
 
-        if (!formData.ifsc_code) errors.ifsc_code = 'Required';
-        else if (!IFSC_REGEX.test(formData.ifsc_code)) errors.ifsc_code = 'Format: ABCD0XXXXXX';
+        // if (!formData.ifsc_code) errors.ifsc_code = 'Required';
+        // else if (!IFSC_REGEX.test(formData.ifsc_code)) errors.ifsc_code = 'Format: ABCD0XXXXXX';
 
-        if (!formData.account_no.trim()) errors.account_no = 'Required';
+        // if (!formData.account_no.trim()) errors.account_no = 'Required';
 
         if (formData.pin_code && formData.pin_code.length !== 6) errors.pin_code = 'Must be exactly 6 digits';
         break;
@@ -585,10 +637,9 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
               gap: 20,
             }}
           >
-            {renderNumericField('Employee Code', 'emp_code', {
+            {renderTextField('Employee Code', 'emp_code', {
               required: true,
-              placeholder: '9-digit employee code',
-              hint: 'Exactly 9 digits',
+              placeholder: 'Employee code',
             })}
             {renderTextField('E.Code (Alternate)', 'e_code', {
               placeholder: 'Alternate code',
@@ -600,12 +651,12 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
               required: true,
               placeholder: 'e.g. OPERATOR, ADMIN',
             })}
-            {renderTextField('Pay Day', 'pay_day', {
+            {/* {renderTextField('Pay Day', 'pay_day', {
               placeholder: 'Day of month',
-            })}
+            })} */}
             {renderNumericField('ESIC Number', 'esic_no', {
-              placeholder: '17-digit ESIC number',
-              hint: 'Exactly 17 digits',
+              placeholder: '10-digit ESIC number',
+              hint: 'Exactly 10 digits',
             })}
             {renderNumericField('UAN Number', 'uan_no', {
               placeholder: '12-digit UAN number',
@@ -642,26 +693,39 @@ export default function EditEmployeeClient({ employee }: { employee: any }) {
               placeholder: 'Permanent address (if different)',
               fullWidth: true,
             })}
-            {renderTextField('District', 'district_name', {
-              placeholder: 'District name',
+            {renderNumericField('PIN Code', 'pin_code', {
+              placeholder: '6-digit PIN code',
+              hint: pincodeLoading ? '⏳ Verifying pincode...' : pincodeError ? undefined : 'Exactly 6 digits',
             })}
+            {pincodeError && (
+              <div className="input-group">
+                <span className="field-error">{pincodeError}</span>
+              </div>
+            )}
+            {districtOptions.length > 0 ? (
+              renderSelectField(
+                'District',
+                'district_name',
+                districtOptions.map((d) => ({ value: d, label: d })),
+              )
+            ) : (
+              renderTextField('District', 'district_name', {
+                placeholder: 'Enter pincode first',
+              })
+            )}
             {renderSelectField(
               'State',
               'state_name',
               INDIAN_STATES.map((s) => ({ value: s, label: s })),
             )}
-            {renderNumericField('PIN Code', 'pin_code', {
-              placeholder: '6-digit PIN code',
-              hint: 'Exactly 6 digits',
-            })}
             {renderTextField('IFSC Code', 'ifsc_code', {
-              required: true,
+              required: false,
               placeholder: 'e.g. SBIN0001234',
               hint: '4 letters + 0 + 6 chars',
               maxLength: 11,
             })}
             {renderTextField('Account Number', 'account_no', {
-              required: true,
+              required: false,
               placeholder: 'Bank account number',
             })}
             {renderTextField('Narration / Remarks', 'narration', {
