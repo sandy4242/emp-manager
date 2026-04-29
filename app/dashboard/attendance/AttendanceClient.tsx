@@ -154,7 +154,7 @@ export default function AttendanceClient({ initialLogs }: AttendanceClientProps)
                   </div>
                 ) : (
                   <button
-                    onClick={() => handleStatusUpdate(log.id, 'pending')}
+                    onClick={() => handleStatusUpdate(log.id, 'approved')}
                     disabled={loadingId === log.id}
                     style={{
                       width: '100%',
