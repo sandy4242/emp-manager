@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { logoutAction } from '../actions/auth';
 import { IconBriefcase, IconLogOut, IconUser } from '../components/Icons';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface DashboardNavProps {
   adminName: string;
@@ -11,6 +13,7 @@ interface DashboardNavProps {
 export default function DashboardNav({ adminName }: DashboardNavProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -63,6 +66,40 @@ export default function DashboardNav({ adminName }: DashboardNavProps) {
             EmpManager
           </span>
         </div>
+
+        {/* Center Navigation */}
+        <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }} className="desktop-only">
+          <Link
+            href="/dashboard"
+            style={{
+              fontSize: 14,
+              fontWeight: pathname === '/dashboard' ? 600 : 500,
+              color: pathname === '/dashboard' ? '#2563eb' : '#6b6b6b',
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: pathname === '/dashboard' ? '#eff6ff' : 'transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Employees
+          </Link>
+          <Link
+            href="/dashboard/attendance"
+            style={{
+              fontSize: 14,
+              fontWeight: pathname === '/dashboard/attendance' ? 600 : 500,
+              color: pathname === '/dashboard/attendance' ? '#2563eb' : '#6b6b6b',
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: pathname === '/dashboard/attendance' ? '#eff6ff' : 'transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Attendance
+          </Link>
+        </nav>
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }} ref={dropdownRef}>
@@ -133,7 +170,40 @@ export default function DashboardNav({ adminName }: DashboardNavProps) {
                     {adminName}
                   </p>
                 </div>
-                <div style={{ padding: '0 8px' }}>
+                <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <Link
+                    href="/dashboard"
+                    style={{
+                      display: 'block',
+                      padding: '8px 12px',
+                      fontSize: 14,
+                      color: pathname === '/dashboard' ? '#2563eb' : '#4b5563',
+                      fontWeight: pathname === '/dashboard' ? 600 : 500,
+                      background: pathname === '/dashboard' ? '#eff6ff' : 'transparent',
+                      borderRadius: '6px',
+                      textDecoration: 'none'
+                    }}
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Employees
+                  </Link>
+                  <Link
+                    href="/dashboard/attendance"
+                    style={{
+                      display: 'block',
+                      padding: '8px 12px',
+                      fontSize: 14,
+                      color: pathname === '/dashboard/attendance' ? '#2563eb' : '#4b5563',
+                      fontWeight: pathname === '/dashboard/attendance' ? 600 : 500,
+                      background: pathname === '/dashboard/attendance' ? '#eff6ff' : 'transparent',
+                      borderRadius: '6px',
+                      textDecoration: 'none'
+                    }}
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Attendance
+                  </Link>
+                  <div style={{ height: 1, background: '#e5e5e3', margin: '4px 0' }}></div>
                   <form action={logoutAction}>
                     <button
                       type="submit"

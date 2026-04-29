@@ -74,3 +74,44 @@ INSERT INTO admins (id, admin_id, password_hash, name) VALUES
 ('a5e11d29-cde8-48b2-b4ea-17614d9b8969', 'admin2', '$2b$10$1eAReoYjVzrcFm.x8a6bAekns7JI1hTi7L43tAxcpsFe8C1mzwK1S', 'Administrator 2'),
 ('fe3b2aae-222a-436d-8dc8-d567ea3a3ca7', 'admin3', '$2b$10$1eAReoYjVzrcFm.x8a6bAekns7JI1hTi7L43tAxcpsFe8C1mzwK1S', 'Administrator 3')
 ON CONFLICT (admin_id) DO NOTHING;
+
+-- ============================================
+-- Attendance Logs Table
+-- ============================================
+CREATE TABLE IF NOT EXISTS attendance_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  employee_id TEXT, -- Optional for now, to be populated later
+  employee_name TEXT, -- Optional for now
+  image_url TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE attendance_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access to attendance logs" ON attendance_logs FOR ALL USING (true) WITH CHECK (true);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_attendance_logs_status ON attendance_logs(status);
+CREATE INDEX IF NOT EXISTS idx_attendance_logs_created_at ON attendance_logs(created_at);
+
+-- ============================================
+-- Storage Buckets
+-- ============================================
+-- Insert the bucket if it doesn't exist
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('attendance-images', 'attendance-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Set up policies for the bucket (Allow all access for anon users)
+CREATE POLICY "Public Access" 
+ON storage.objects FOR SELECT 
+USING ( bucket_id = 'attendance-images' );
+
+CREATE POLICY "Allow Insert" 
+ON storage.objects FOR INSERT 
+WITH CHECK ( bucket_id = 'attendance-images' );
+
+CREATE POLICY "Allow Delete"
+ON storage.objects FOR DELETE
+USING ( bucket_id = 'attendance-images' );
