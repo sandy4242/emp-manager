@@ -115,3 +115,24 @@ WITH CHECK ( bucket_id = 'attendance-images' );
 CREATE POLICY "Allow Delete"
 ON storage.objects FOR DELETE
 USING ( bucket_id = 'attendance-images' );
+
+-- ============================================
+-- Inventory Table
+-- ============================================
+CREATE TABLE IF NOT EXISTS inventory (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  price DECIMAL(10, 2),
+  status TEXT DEFAULT 'available',
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access to inventory" ON inventory FOR ALL USING (true) WITH CHECK (true);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_inventory_status ON inventory(status);
+CREATE INDEX IF NOT EXISTS idx_inventory_created_at ON inventory(created_at);

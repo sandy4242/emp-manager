@@ -99,6 +99,21 @@ export default function DashboardNav({ adminName }: DashboardNavProps) {
           >
             Attendance
           </Link>
+          <Link
+            href="/dashboard/inventory"
+            style={{
+              fontSize: 14,
+              fontWeight: pathname === '/dashboard/inventory' ? 600 : 500,
+              color: pathname === '/dashboard/inventory' ? '#2563eb' : '#6b6b6b',
+              textDecoration: 'none',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              background: pathname === '/dashboard/inventory' ? '#eff6ff' : 'transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Inventory
+          </Link>
         </nav>
 
         {/* Right side */}
@@ -202,6 +217,22 @@ export default function DashboardNav({ adminName }: DashboardNavProps) {
                     onClick={() => setDropdownOpen(false)}
                   >
                     Attendance
+                  </Link>
+                  <Link
+                    href="/dashboard/inventory"
+                    style={{
+                      display: 'block',
+                      padding: '8px 12px',
+                      fontSize: 14,
+                      color: pathname === '/dashboard/inventory' ? '#2563eb' : '#4b5563',
+                      fontWeight: pathname === '/dashboard/inventory' ? 600 : 500,
+                      background: pathname === '/dashboard/inventory' ? '#eff6ff' : 'transparent',
+                      borderRadius: '6px',
+                      textDecoration: 'none'
+                    }}
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Inventory
                   </Link>
                   <div style={{ height: 1, background: '#e5e5e3', margin: '4px 0' }}></div>
                   <form action={logoutAction}>
